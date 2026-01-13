@@ -1,0 +1,44 @@
+{
+  "@context": [
+      "http://www.w3.org/ns/odrl.jsonld",
+      "http://www.w3.org/ns/tdmrep.jsonld"
+  ],
+
+  "@type": "Offer",
+  "profile": "http://www.w3.org/ns/tdmrep",
+  "uid": "https://geetaa.sameekshaa.in/id/policies/1",
+  "assigner": {
+    "uid": "https://geetaa.sameekshaa.in/id/assigner/1",
+    "vcard:hasURL": "eng/about.html"
+  },
+  "permission": [{
+      "action": "tdm:mine",
+      "duty": [{ 
+        "action": "obtainConsent"
+        },
+        { 
+        "action": "compensate"
+        }
+      ],
+      "constraint": [{
+        "leftOperand": "purpose",
+        "operator": "eq",
+        "rightOperand": "tdm:non-research"
+        }
+      ]
+    },
+    {
+      "action": "tdm:mine",
+      "duty": [{ 
+        "action": "obtainConsent"
+        }
+      ],
+      "constraint": [{
+        "leftOperand": "purpose",
+        "operator": "eq",
+        "rightOperand": "tdm:research"
+        }
+      ]
+    }    
+  ]
+}

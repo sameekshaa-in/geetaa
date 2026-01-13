@@ -1,0 +1,76 @@
+User-agent: Googlebot
+Disallow: /.nojekyll
+Disallow: /CNAME
+Disallow: /*.md
+Disallow: /assets/
+
+User-agent: Bingbot
+Disallow: /.nojekyll
+Disallow: /CNAME
+Disallow: /*.md
+Disallow: /assets/
+
+User-agent: YandexBot
+Disallow: /.nojekyll
+Disallow: /CNAME
+Disallow: /*.md
+Disallow: /assets/
+
+User-agent: Qwantify
+Disallow: /.nojekyll
+Disallow: /CNAME
+Disallow: /*.md
+Disallow: /assets/
+
+User-agent: MetaGer
+Disallow: /.nojekyll
+Disallow: /CNAME
+Disallow: /*.md
+Disallow: /assets/
+
+User-agent: metagerbot
+Disallow: /.nojekyll
+Disallow: /CNAME
+Disallow: /*.md
+Disallow: /assets/
+
+User-agent: MojeekBot
+Disallow: /.nojekyll
+Disallow: /CNAME
+Disallow: /*.md
+Disallow: /assets/
+
+User-agent: Bravebot
+Disallow: /.nojekyll
+Disallow: /CNAME
+Disallow: /*.md
+Disallow: /assets/
+
+User-agent: DuckDuckBot
+Disallow: /.nojekyll
+Disallow: /CNAME
+Disallow: /*.md
+Disallow: /assets/
+
+User-agent: Applebot
+Disallow: /.nojekyll
+Disallow: /CNAME
+Disallow: /*.md
+Disallow: /assets/
+
+User-agent: ia_archiver
+Disallow: /.nojekyll
+Disallow: /CNAME
+Disallow: /*.md
+
+User-agent: archive.org_bot
+Disallow: /.nojekyll
+Disallow: /CNAME
+Disallow: /*.md
+
+User-agent: *
+Allow: /.well-known/tdmrep.json
+Allow: /tdm-policy.json
+Allow: /eng/terms.html
+Disallow: /wip/
+Disallow: /

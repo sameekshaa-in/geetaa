@@ -1,0 +1,905 @@
+/* =========================
+   Text-first, multilingual, black & white
+   No webfonts; relies on system/native fonts
+   Language-driven styling via lang attribute
+   ========================= */
+
+/* Color-scheme management */
+:root {
+  color-scheme: light dark; /* tell UA both light and dark schemes are supported */
+
+  /* setup tokens for light and dark mode properties */
+  --bg-light: #ffffff;
+  --bg-emphasis-light: #e6e6e6;
+  --text-light: #000000;
+  --border-light-light: rgba(0,0,0,0.1);
+  --border-strong-light: rgba(0,0,0,0.25);
+  --focus-light: #000000;
+
+  --bg-dark: #0f0f0f;
+  --bg-emphasis-dark: #2a2a2a;
+  --text-dark: #ffffff;
+  --border-light-dark: rgba(255,255,255,0.15);
+  --border-strong-dark: rgba(255,255,255,0.35);
+  --focus-dark: #ffffff;
+
+  /* light mode by default */
+  --bg: var(--bg-light);
+  --bg-emphasis: var(--bg-emphasis-light);
+  --text: var(--text-light);
+  --border-color-light: var(--border-light-light);
+  --border-color-strong: var(--border-strong-light);
+  --focus-color: var(--focus-light);
+}
+
+/* switch token values if system preference is dark */
+
+/*
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: var(--bg-dark);
+    --bg-emphasis: var(--bg-emphasis-dark);
+    --text: var(--text-dark);
+    --border-color-light: var(--border-light-dark);
+    --border-color-strong: var(--border-strong-dark);
+    --focus-color: var(--focus-dark);
+  }
+}
+*/
+
+/* dark-mode toggle is made in JS when user overrides; not dark mode means light mode */
+html.dark-mode {
+  --bg: var(--bg-dark);
+  --bg-emphasis: var(--bg-emphasis-dark);
+  --text: var(--text-dark);
+  --border-color-light: var(--border-light-dark);
+  --border-color-strong: var(--border-strong-dark);
+  --focus-color: var(--focus-dark);
+}
+
+/* style color-scheme controls */
+#colorSchemeControls {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+#colorSchemeControls button {
+  all: unset;
+  cursor: pointer;
+  font-size: 0.85rem;
+  text-decoration: underline;
+}
+
+#colorSchemeControls button:hover {
+  text-decoration: none;
+}
+
+#colorSchemeStatus {
+  font-size: 0.85rem;
+}
+
+#colorSchemeControls .pipe {
+  margin: 0 0.25rem;
+  color: inherit;
+}
+
+/* --- end of color-scheme management */
+
+
+/* --- Root variables --- */
+:root{
+  --max-width: 980px;
+  --pad: 1rem;
+  --measure: 70ch;
+  --line: 1.65;
+  --scale-eng: 1.0;           /* value by trial and error; depends on font */
+  --header-logo-size: 72px;
+  --transition: 180ms ease;
+
+  /* 
+    horizontal offset for chapter navs: -3rem if vw < --max-width; else 6rem set in media query
+    experimentally determined, works well enough
+  */
+  --chapter-nav-btn-horizontal-offset: -3rem;
+
+  /* UA-size tokens for headings (rem-based, stable relative to root) */
+  --h1-size-ua: 2rem;
+  --h2-size-ua: 1.5rem;
+  --h3-size-ua: 1.17rem;
+  --h4-size-ua: 1rem;
+  --h5-size-ua: 0.83rem;
+
+  /* Uniform heading metrics */
+  --h1-line-height: 1.05;
+  --h2-line-height: 1.15;
+  --h3-line-height: 1.25;
+  --h4-line-height: 1.3;
+  --h5-line-height: 1.35;
+
+  --h1-weight: 600;
+  --h2-weight: 600;
+  --h3-weight: 600;
+  --h4-weight: 600;
+  --h5-weight: 500;
+}
+
+/* border box throughout */
+*,
+*::before,
+*::after { box-sizing: border-box; }
+
+/* Accessibility: smooth scroll */
+html{ scroll-behavior: smooth; }
+
+/* --- Base / Reset --- */
+html, body { height: 100%; }
+
+body{
+  margin: 0;
+  padding: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 1rem; /* baseline for Indic scripts */
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+  line-height: var(--line);
+  transition: background var(--transition), color var(--transition);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-text-size-adjust: 100%;
+  -ms-text-size-adjust: 100%;
+}
+
+/* --- Content container & measure --- */
+main{
+  max-width: min(var(--max-width), var(--measure));
+  width: calc(100% - 2 * var(--pad));
+  padding: var(--pad);
+  margin: 0 auto;
+}
+
+/* --- header with logo slots --- */
+header{
+  position: relative;
+  padding: 1rem 0 0.6rem;
+  text-align: center;
+  background: var(--bg);
+}
+
+/* Constrained inner header to align with main */
+.header-inner{
+  display: flex;
+  align-items: flex-start; /* top-align the header slots and the center column */
+  justify-content: space-between;
+  max-width: min(var(--max-width), var(--measure));
+  width: calc(100% - 2 * var(--pad));
+  margin: 0 auto;
+  padding: 0;
+  padding-top: 0.25rem;     /* room at top */
+  gap: 1rem;
+}
+
+/* header layout: separate top (logo + title) and bottom (stacked navs) */
+
+/* center and stack items vertically */
+.header-top .header-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+/* make header-bottom stack the two nav bars and allow them to use full inner width */
+.header-bottom {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  align-items: center;
+  max-width: min(var(--max-width), var(--measure));
+  width: calc(100% - 2 * var(--pad));
+  margin: 0 auto;
+  padding: 0;
+}
+
+/* ensure navs inside header-bottom take full available width of the constrained container */
+.header-bottom .site-nav,
+.header-bottom .lang-nav {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+/* center navs and allow them to expand */
+.header-bottom .site-nav ul,
+.header-bottom .lang-nav ul {
+  justify-content: center;
+}
+
+/* align logo slots  */
+.header-slot{
+  width: var(--header-logo-size);
+  height: var(--header-logo-size);
+  display: flex;
+  align-items: flex-start;  /* top align */
+  padding-top: 0.12rem;     /* breathing room at the top */
+  justify-content: center;
+}
+
+/* control vertical position of logos */
+.header-slot img{
+  display: block;
+  max-width: 100%;
+  max-height: 100%;
+  margin-top: 0;           /* no unwanted centering margin */
+}
+
+/* center column stacks title, subtitle, nav vertically */
+.header-center{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  text-align: center;
+  flex: 1 1 auto;
+  min-width: 0;
+  margin-top: 0.18rem;     /* nudge content down to balance the look */
+}
+
+/* heading typography */
+/* Use UA-size tokens for base sizes and remove default margins for headings;
+   set uniform line-height and font-weight per heading type so those metrics
+   are consistent everywhere for a given heading. */
+h1, h2, h3, h4, h5 {
+  margin: 0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* concrete sizes and uniform metrics per heading type */
+h1 {
+  font-size: var(--h1-size-ua);
+  line-height: var(--h1-line-height);
+  font-weight: var(--h1-weight);
+}
+h2 {
+  font-size: var(--h2-size-ua);
+  line-height: var(--h2-line-height);
+  font-weight: var(--h2-weight);
+}
+h3 {
+  font-size: var(--h3-size-ua);
+  line-height: var(--h3-line-height);
+  font-weight: var(--h3-weight);
+}
+h4 {
+  font-size: var(--h4-size-ua);
+  line-height: var(--h4-line-height);
+  font-weight: var(--h4-weight);
+}
+h5 {
+  font-size: var(--h5-size-ua);
+  line-height: var(--h5-line-height);
+  font-weight: var(--h5-weight);
+}
+
+h5.header{
+  padding-top: 0.7rem;     /* room after title */
+}
+
+/* --- Navigation (site and language) --- */
+nav.site-nav,
+nav.lang-nav {
+  display: flex;
+  justify-content: center;
+  padding: 0;
+  margin-top: 0.25rem;
+}
+
+nav.site-nav a,
+nav.lang-nav a {
+  color: inherit;
+  text-decoration: none;
+  padding: 0.2rem 0.5rem;
+  font-size: 0.95rem;
+}
+
+/* active-page, active-lang markers: bold but shrink the space around */
+nav.site-nav a.current-page-url,
+nav.lang-nav a.current-page-lang { 
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+/* lang-nav management: 
+    - two lang nav menus: horizontal and vertical
+    - the last horizontal item is an "expansion item/wrapper" which includes expansion label and the vertical menu
+    - progressively hide one/more horizontal items at different breakpoints: experimentally determined
+    - progressively show items in the vertical menu: as if we move items from horizontal to vertical
+    - show expansion label when any item is removed from horizontal menu
+    - show vertical menu when the expansion label receives focus: click or tab in
+    - vertical menu auto hides when the expansion element loses focus
+*/
+
+nav.site-nav ul,
+nav.lang-nav .lang-nav-horizontal {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+/* expansion wrapper: anchor the vertical menu */
+.lang-nav-expansion {
+  position: relative;
+}
+
+/* expansion label hidden by default, shown at first breakpoint */
+.lang-nav-expansion-label {
+  display: none;
+  cursor: pointer;
+  padding: 0.2rem 0.45rem;
+  background-color: var(--bg-emphasis);
+  border-radius: 2px;              /* pill background */
+  
+  /* 
+    !important: styling applies independent of lang-attr styling
+    - lang attr of label is explicitly set to zxx in HTML, but that seems to not help
+    - could move the lang(eng) rules above in this sheet but that adds a lot of noise
+
+    The properties below are set based on content: must review with change in lang list, order
+  */
+  font-size: 0.75rem !important;
+  line-height: 0.6 !important;
+  margin-left: 0.5rem !important; /* extra space on left */
+}
+
+/* expansion label content: use only widely-supported chars */
+.lang-nav-expansion-label::before {
+  content: "▼";   /* U+25BC down-pointing triangle */
+}
+
+.lang-nav-expansion-label:hover {
+  outline: 3px solid var(--focus-color);
+}
+
+/* vertical menu: hidden by default */
+.lang-nav-expansion .lang-nav-vertical {
+  display: none;
+  list-style: none;
+  flex-direction: column;
+  gap: 0.15rem;
+  margin: 0;
+  padding: 0.15rem 0.25rem;
+  background: var(--bg-emphasis);
+  border: 1px solid var(--border-color-light);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15); /* soft shadow */
+  z-index: 100;
+
+  /* let the menu grow toward left edge of screen: fits long native names without obscuring them */
+  position: absolute;       /* overlay, not reflow */
+  top: calc(100% + 0.1rem); /* directly below the label */
+  right: 0;                 /* align right edge of menu with label's */
+  width: max-content;       /* menu width fits content */
+  max-width: 90vw;          /* safety cap on very small screens */
+}
+
+/* vertical lang menu items: left-justified items,  */
+.lang-nav-expansion .lang-nav-vertical li {
+  display: none;            /* hidden by default, shown as vw narrows */
+  text-align: left;         /* left justified */
+  align-self: flex-start;
+  margin: 0;
+  padding: 0;
+}
+
+/* show the vertical menu when the expansion wrapper has focus */
+.lang-nav-expansion:focus-within .lang-nav-vertical {
+  display: flex;
+}
+
+/*
+  Lang nav adaption:
+
+  Summary
+  - Goal: show as many horizontal language items as fit without wrapping; overflow the rest
+    into the vertical menu and reveal the expansion label when any horizontal item is removed.
+  - Strategy: progressively tighten available width at experimental breakpoints and hide
+    horizontal items by DOM position (nth-last-of-type), showing corresponding items in the
+    vertical list. Keep visual and keyboard order consistent.
+
+  Measurement & tuning
+  - Calibrate using the page variant with the widest language label as the active/current item
+    (bolding affects width)
+  - Measure nav inline width in DevTools (Computed → width) at the viewport widths where wrapping
+    first appears. Expect a 1–3px safety margin earlier than the apparent wrap point.
+  - Use DevTools Responsive mode with monitors of different resolutions: 720p, 1080, 1280. 
+    Also check in Chrome browseer by sliding the page width with "Inspect" window open.
+  - Recheck whenever any of these change: language list, language order, spelling, font, or header template.
+
+  Implementation details & invariants
+  - Horizontal last element is the expansion wrapper; hide starting from nth-last-of-type(2).
+  - Vertical menu contains no expansion wrapper; show starting from last item.
+  - Prefer DOM moves (or server‑rendered fallback + JS enhancement) so tab order and semantics remain intact.
+  - Keep px comments next to rem values if you convert units.
+
+  Alternatives (tradeoffs)
+  - Full JS runtime solution: robust to content changes, but non‑trivial to build/test; also adds runtime cost.
+  - rem breakpoints instead of px: scales with root font-size (accessibility), but requires conversion at dev time
+    and shifts if users change root size.
+  - Container queries instead of media queries: best for component‑level breakpoints; measure container width
+    instead of viewport (which is more work than getting vw width). May need fallbacks for older browsers.
+  - Hybrid: small JS to detect root font-size or to toggle precomputed CSS classes for a few common root sizes.
+
+  Recommendation
+  - Current CSS approach witn px measurements of viewport has minimal runtime complexity and provides adequate runtime
+    behavior because the collapsing lang nav is used in just one header template.
+*/
+
+/* tighten space and size */
+@media (max-width: 365px) {
+  nav.lang-nav .lang-nav-horizontal a {
+    font-size: 0.9rem !important;
+    padding: 0.15rem 0.45rem !important;
+  }
+}
+
+@media (max-width: 346px) {
+  nav.lang-nav .lang-nav-horizontal a {
+    padding: 0.15rem 0.35rem !important;
+  }
+}
+
+@media (max-width: 330px) {
+  nav.lang-nav .lang-nav-horizontal a {
+    padding: 0.12rem 0.3rem !important;
+  }
+}
+
+@media (max-width: 322px) {
+  nav.lang-nav .lang-nav-horizontal a {
+    font-size: 0.85rem !important;
+  }
+}
+
+@media (max-width: 311px) {
+  nav.lang-nav .lang-nav-horizontal a {
+    font-size: 0.85rem !important;
+    padding: 0.12rem 0.25rem !important;
+  }
+}
+
+@media (max-width: 303px) {
+  nav.lang-nav .lang-nav-horizontal a {
+    padding: 0.12rem 0.2rem !important;
+  }
+}
+
+/* hide one lang, show expansion label; no space to relax due to margin-left of expansion label */
+@media (max-width: 296px) {
+  .lang-nav-horizontal li:nth-last-of-type(2) { display: none; }
+  .lang-nav-expansion:focus-within .lang-nav-vertical 
+    li:nth-last-of-type(1) { display: list-item; }
+
+  nav.lang-nav .lang-nav-expansion-label { display: inline-block; }
+}
+
+/* tighten space and size */
+@media (max-width: 280px) {
+  nav.lang-nav .lang-nav-horizontal a {
+    font-size: 0.8rem !important;
+    padding: 0.12rem 0.2rem !important;
+  }
+}
+
+/* hide one more lang; relax spacing */
+@media (max-width: 272px) {
+  .lang-nav-horizontal li:nth-last-of-type(3) { display: none; }
+  .lang-nav-expansion:focus-within .lang-nav-vertical 
+    li:nth-last-of-type(2) { display: list-item; }
+
+  nav.lang-nav .lang-nav-horizontal a {
+    font-size: 0.9rem !important;
+    padding: 0.15rem 0.35rem !important;
+  }
+}
+
+/* tighten space and size */
+@media (max-width: 248px) {
+  nav.lang-nav .lang-nav-horizontal a {
+    font-size: 0.85rem !important;
+    padding: 0.12rem 0.2rem !important;
+  }
+}
+
+@media (max-width: 226px) {
+  nav.lang-nav .lang-nav-horizontal a {
+    font-size: 0.8rem !important;
+    padding: 0.12rem 0.18rem !important;
+  }
+}
+
+/* hide one more lang; relax spacing */
+@media (max-width: 218px) {
+  .lang-nav-horizontal li:nth-last-of-type(4) { display: none; }
+  .lang-nav-expansion:focus-within .lang-nav-vertical 
+    li:nth-last-of-type(3) { display: list-item; }
+
+  nav.lang-nav .lang-nav-horizontal a {
+    font-size: 0.9rem !important;
+    padding: 0.15rem 0.35rem !important;
+  }
+}
+
+/* tighten space and size */
+@media (max-width: 200px) {
+  nav.lang-nav .lang-nav-horizontal a {
+    font-size: 0.85rem !important;
+    padding: 0.12rem 0.2rem !important;
+  }
+}
+
+@media (max-width: 186px) {
+  nav.lang-nav .lang-nav-horizontal a {
+    font-size: 0.8rem !important;
+    padding: 0.12rem 0.18rem !important;
+  }
+}
+
+/* 
+  hide one more lang which leaves just one lang in the horizontal menu
+  - instead of one orphan-looking lang, hide all but the expansion wrapper
+  - change expansion label to "languages" icon and restyle to match
+  - move the languages icon to top left of the "screen" and position the vertical menu under it
+*/
+@media (max-width: 180px) {
+  .lang-nav-horizontal li:not(.lang-nav-expansion) { display: none; }
+  .lang-nav-expansion:focus-within .lang-nav-vertical li { display: list-item; }
+
+  .lang-nav-expansion-label::before {
+    content: "🌐";                  /* languages icon; TODO: replace with monochrome SVG */
+  }
+
+  .lang-nav-expansion-label {
+    background-color: var(--bg);     /* no bg emphasis */
+    border-radius: 0px;              /* no pill background */
+  }
+
+  .lang-nav-expansion-label:hover {
+    outline: none;
+  }
+
+  /* prevent wrapper <li> from collapsing weirdly: wrapper must NOT become the containing block */
+  .lang-nav-expansion {
+    position: static;
+  }
+
+  /* move label to top right of screen */
+  .lang-nav-expansion-label {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.25rem;
+    z-index: 9999;
+
+    margin: 0 !important;
+    padding: 0.25rem 0.4rem;
+  }
+
+  /* anchor vertical menu to the header, not the wrapper */
+  .lang-nav-expansion .lang-nav-vertical {
+    position: absolute;
+    top: calc(0.5rem + 1.4rem); /* label top + label height */
+    right: 0.25rem;             /* align right edge with the label's */
+    left: auto;
+    z-index: 9998;
+  }
+}
+
+/* Baseline content typography (Indic baseline) */
+:where(p, div, li, dd, dt, blockquote, table, td, th){
+  margin: 0 0 0.9rem 0;
+  font-size: 1rem;          /* baseline for Indic scripts */
+  hyphens: auto;
+  word-break: keep-all;     /* better for Indic rendering */
+}
+
+/* --- Tables --- */
+table{ border-collapse: collapse; width: 100%; margin-bottom: 0.9rem; }
+td, th{ padding: 0.35rem 0.5rem; vertical-align: top; text-align: left; }
+
+/* Interaction: hover + keyboard focus */
+tbody tr { transition: background .15s ease, transform .08s ease; }
+tbody tr:hover { background: rgba(0,0,0,0.04); }
+tbody tr:focus-within { background: rgba(0,0,0,0.06); outline: none; }
+
+/* Improve clickable area for links inside cells (helps keyboard focus) */
+tbody td a { display: inline-block; padding: 0.18rem 0; }
+
+/* Title column typographic emphasis */
+tbody td:nth-child(2) a {
+  font-weight: 600;
+  color: inherit;
+  text-decoration: none;
+}
+tbody td:nth-child(2) a:hover,
+tbody td:nth-child(2) a:focus { text-decoration: underline; }
+
+/* Subtle zebra fallback for long lists (optional but gentle) */
+tbody tr:nth-child(2n) { background: rgba(0,0,0,0.015); }
+
+
+/* Chapter navigation */
+.chapter-nav-btn {
+  position: fixed;
+  top: 60vh;          /* a bit past viewport center */
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: var(--text);
+  background: var(--bg-emphasis);
+  padding: 10px 12px;
+  border-radius: 50%;
+  box-shadow: 0 0 10px rgba(0,0,0,0.3);
+  border: 1px solid var(--border-color-light);
+  cursor: pointer;
+  z-index: 9999;
+  transition: background var(--transition), color var(--transition);
+}
+
+/* on narrower viewports (width), shrink nav buttons */
+@media (max-width: 600px) {
+  .chapter-nav-btn {
+    font-size: 1rem;
+    padding: 6px 8px;
+  }
+}
+
+/* on shorter viewports (height), place nav btns as low as possible */
+@media (max-height: 400px) {
+  .chapter-nav-btn {
+    top: auto;
+    bottom: 1rem;
+  }
+}
+
+/* 
+  adjust horizontal offset for wider viewport: experimentally determined based on vw
+  hardcoded 980px because media query can's use vars
+  the actual value used should match value of var --max-width
+*/
+@media (min-width: 980px) {
+  :root {
+    --chapter-nav-btn-horizontal-offset: 6rem;
+  }
+}
+
+/* 
+  horizontal position: at least 10px past safe distance from viewport edges
+  - max ensures buttons don't go off screen
+*/
+#chapterNavBtnPrevious {
+  left: max(
+    calc(env(safe-area-inset-left, 0px) + 10px),
+    calc(50% - (var(--max-width) / 2) + var(--chapter-nav-btn-horizontal-offset))
+  );
+}
+
+#chapterNavBtnNext {
+  right: max(
+    calc(env(safe-area-inset-right, 0px) + 10px), 
+    calc(50% - (var(--max-width) / 2) + var(--chapter-nav-btn-horizontal-offset))
+  );
+}
+
+/* highlight on hover and focus, but only if enabled */
+.chapter-nav-btn:not(.disabled):hover,
+.chapter-nav-btn:not(.disabled):focus {
+  outline: 3px solid var(--focus-color);
+}
+
+/* dim if disabled */
+.chapter-nav-btn.disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+/* don't look like a link */
+a.chapter-nav-btn {
+  text-decoration: none;
+}
+
+
+
+/* --- Language-driven rules (no .lang-eng required) --- */
+/* English: set family and line-height; scale non-heading content via :not(:is(...))
+   so headings are controlled by per-heading rules (below). */
+:lang(en),
+:lang(eng),
+[lang|="en"],
+[lang|="eng"] {
+  font-family: Georgia, "Times New Roman", "Merriweather", serif;
+}
+
+/* Keep .lang-eng as an alias to avoid surprises for any edge cases */
+.lang-eng,
+.lang-eng * { /* alias so class continues to work if accidentally emitted */
+  font-family: Georgia, "Times New Roman", "Merriweather", serif;
+}
+
+/* scale non-heading content in English without enumerating element types */
+:lang(en) :where(:not(:is(h1,h2,h3,h4,h5))),
+:lang(eng) :where(:not(:is(h1,h2,h3,h4,h5))),
+[lang|="en"] :where(:not(:is(h1,h2,h3,h4,h5))),
+[lang|="eng"] :where(:not(:is(h1,h2,h3,h4,h5))) {
+  font-size: calc(1rem * var(--scale-eng));
+  line-height: calc(var(--line) * var(--scale-eng));
+}
+
+/* Per-heading language-only overrides (robust: matches element-level or ancestor-level language)
+   Change only font-size (and heading-specific line-height scaled for English); these rules
+   must follow the base language block so cascade/order is clear. */
+
+/* h1 */
+h1:lang(en),
+h1:lang(eng),
+h1[lang="en"],
+h1[lang="eng"],
+:lang(en) h1,
+:lang(eng) h1,
+h1[lang="latn-x"],
+:lang("latn-x") h1 {
+  font-size: calc(var(--h1-size-ua) * var(--scale-eng));
+  line-height: calc(var(--h1-line-height) * var(--scale-eng));
+}
+
+/* h2 */
+h2:lang(en),
+h2:lang(eng),
+h2[lang="en"],
+h2[lang="eng"],
+:lang(en) h2,
+:lang(eng) h2,
+h2[lang="latn-x"],
+:lang("latn-x") h2 {
+  font-size: calc(var(--h2-size-ua) * var(--scale-eng));
+  line-height: calc(var(--h2-line-height) * var(--scale-eng));
+}
+
+/* h3 */
+h3:lang(en),
+h3:lang(eng),
+h3[lang="en"],
+h3[lang="eng"],
+:lang(en) h3,
+:lang(eng) h3,
+h3[lang="latn-x"],
+:lang("latn-x") h3 {
+  font-size: calc(var(--h3-size-ua) * var(--scale-eng));
+  line-height: calc(var(--h3-line-height) * var(--scale-eng));
+}
+
+/* h4 */
+h4:lang(en),
+h4:lang(eng),
+h4[lang="en"],
+h4[lang="eng"],
+:lang(en) h4,
+:lang(eng) h4,
+h4[lang="latn-x"],
+:lang("latn-x") h4 {
+  font-size: calc(var(--h4-size-ua) * var(--scale-eng));
+  line-height: calc(var(--h4-line-height) * var(--scale-eng));
+}
+
+/* h5 */
+h5:lang(en),
+h5:lang(eng),
+h5[lang="en"],
+h5[lang="eng"],
+:lang(en) h5,
+:lang(eng) h5,
+h5[lang="latn-x"],
+:lang("latn-x") h5 {
+  font-size: calc(var(--h5-size-ua) * var(--scale-eng));
+  line-height: calc(var(--h5-line-height) * var(--scale-eng));
+}
+
+
+/* Transliteration detection: any lang tag containing -Latn-x- */
+/* Matches san-Latn-x-IAST, kan-Latn-x-iso15919, etc. */
+[lang*="-Latn-x-"],
+[lang*="-Latn-x-"] * {
+  /* pick a diacritic-capable serif for scholarly transliteration; fall back to robust families */
+  font-family: "Gentium Plus", "Charis SIL", "Noto Serif", "Noto Sans", serif;
+  /* tuned typographic defaults for transliteration */
+  hyphens: manual;
+  font-variant-ligatures: none;
+  letter-spacing: 0;
+}
+
+/* If we need to tune transliteration blocks differently (example selector) */
+/* Example: transliterated Indic primary languages (optional) */
+[lang^="san-"][lang*="-Latn-x-"],
+[lang^="kan-"][lang*="-Latn-x-"],
+[lang^="hin-"][lang*="-Latn-x-"],
+[lang^="tel-"][lang*="-Latn-x-"] {
+  /* language-specific small tweaks can go here */
+  /* e.g., slightly increased line-height if needed */
+}
+
+/* --- Links & focus --- */
+a{
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+}
+a:hover{ text-decoration-thickness: 2px; }
+
+a:focus, button:focus, input:focus, textarea:focus{
+  outline: 2px dashed var(--focus-color);
+  outline-offset: 3px;
+}
+
+
+
+
+
+/* --- utilities --- */
+.hidden{ display: none; }
+.center{ text-align: center; }
+.small{ font-size: 0.88rem; opacity: 0.95; }
+.lead{ font-weight: 500; font-size: 1.08em; margin-bottom: 1rem; }
+
+
+/* more room for main content on very large screens while keeping lines readable */
+@media (min-width: 1200px){
+  main{ max-width: calc(var(--max-width) + 120px); }
+}
+
+
+/* responsive header for narrow viewports */
+@media (max-width: 640px) {
+  .header-inner {
+    flex-direction: column;
+    align-items: center;
+    gap: 0.6rem;
+    padding-top: 0.4rem;
+  }
+
+  .header-center {
+    margin-top: 0;
+  }
+
+  .header-slot {
+    padding-top: 0;
+    align-items: center;        /* center logos inside slot */
+  }
+
+  .header-slot--right {
+      display: none !important; /* hide right logo */
+  }
+
+  .header-slot img {
+    margin-top: 0;
+  }
+}
+
+/* responsive headings on very small screens */
+@media (max-width: 420px) {
+  :root {
+    --h1-size-ua: calc(var(--h1-size-ua) * 0.95);
+    --h2-size-ua: calc(var(--h2-size-ua) * 0.95);
+    --h3-size-ua: calc(var(--h3-size-ua) * 0.95);
+    --h4-size-ua: calc(var(--h4-size-ua) * 0.95);
+    --h5-size-ua: calc(var(--h5-size-ua) * 0.95);
+  }
+}
+
+/* Print rules */
+@media print{
+  body{ background: #fff; color: #000; }
+  .toggle-dark{ display: none; }
+  a{ text-decoration: none; }
+  .header-slot{ display: none; } /* hide inline header logos in print */
+}
